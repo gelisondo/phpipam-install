@@ -1,0 +1,35 @@
+---
+
+# tasks file for MySQL
+- name: Install mysql
+  apt: pkg={{ item }} state=present
+  with_items: "{{ mysql.packages }}"
+  when: (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bulseye") or
+        (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bookworm") 
+
+- name: Asegurarse de que mysql esté corriendo y habilitado al inicio.
+  service: name=mysql state=started enabled=yes
+
+##1) Creamos la DB
+- name: Creamos una nueva DB para PhpIpam.
+  community.mysql.mysql_db:
+    login_user: root
+    login_password: ""
+    login_host: localhost
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: "{{ db_name }}"
+    state: present
+  become: yes
+
+##2) Creamos El usuario y la DB le asignamos todos los privilegios.
+- name: Creamos usuario MySql y Atorgamos todos los privilegios sobre la DB para WP.
+  community.mysql.mysql_user:
+    login_user: root
+    login_password: ""
+    login_host: localhost
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: "{{ db_user }}"
+    password: "{{ db_pass }}"
+    priv: '{{ db_name }}.*:ALL,GRANT'
+    state: present
+  become: yes

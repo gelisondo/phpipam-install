@@ -1,0 +1,37 @@
+---
+
+# tasks file for System packages
+- name: Update Cache
+  ansible.builtin.apt:
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
+
+- name: Update system
+  ansible.builtin.apt:
+    upgrade: dist
+    force_apt_get: yes
+
+
+- name: Install SystemConfig Packages
+  apt: pkg={{ item }} state=present
+  with_items: "{{ systemconfig.packages }}"
+  when: (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bulseye") or
+        (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bookworm")
+
+
+#Sevidor Web
+- name: Install Apache2
+  apt: pkg={{ item }} state=present
+  with_items: "{{ apache2.packages.debian.bullseye_bookworm }}"
+  when: (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bulseye" ) or
+        (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bookworm")
+
+- name: Habilitamos Apache2 al inicio
+  service: name=apache2 state=started enabled=yes
+
+#Paquetes php
+- name: Install Soporte PHP
+  apt: pkg={{ item }} state=present
+  with_items: "{{ php.packages.php82 }}"
+  when: (ansible_facts['distribution'] == "Debian" and ansible_facts['distribution_release'] == "bookworm")

@@ -1,0 +1,19 @@
+---
+# tasks file for phpipam-install
+
+- import_tasks: requieriments.yml
+  tags:
+    - phpipam-install
+    - phpipam-requieriments
+
+- import_tasks: database-install.yml
+  tags:
+    - phpipam-install
+    - phpipam-db
+
+- import_tasks: installations-config.yml
+  tags:
+    - phpipam-install
+    - phpipam-config
+
+

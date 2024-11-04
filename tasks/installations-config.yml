@@ -1,0 +1,88 @@
+---
+#Descargamos el proyecto de Github
+- name: Clone GitHub project
+  ansible.builtin.git:
+    repo: https://github.com/phpipam/phpipam.git
+    dest: /var/www/phpipam
+    version: "{{ GIT_VERSION }}"
+
+- name: Change the owner an permisions
+  ansible.builtin.file:
+    dest: "/var/www/phpipam"
+    state: directory
+    recurse: true
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    #Set directories to 755 and files to 644
+    mode: u=rwX,g=rX,o=rX
+
+
+- name: Config User DB
+  ansible.builtin.lineinfile:
+    path: /var/www/phpipam/config.dist.php
+    regexp: '^\$db\[\x27user\x27\]\s*=\s*\x27phpipam\x27;'
+    line: "$db['user'] = '{{ db_user }}';"
+
+- name: Config Password DB
+  ansible.builtin.lineinfile:
+    path: /var/www/phpipam/config.dist.php
+    regexp: '^\$db\[\x27pass\x27\]\s*=\s*\x27phpipamadmin\x27;'
+    line: "$db['pass'] = '{{ db_pass }}';"
+
+- name: Config DB Name
+  ansible.builtin.lineinfile:
+    path: /var/www/phpipam/config.dist.php
+    regexp: '^\$db\[\x27name\x27\]\s*=\s*\x27phpipam\x27;'
+    line: "$db['name'] = '{{ db_name }}';"
+
+
+- name: Copy config file to production.
+  ansible.builtin.copy:
+    src: /var/www/phpipam/config.dist.php
+    dest: /var/www/phpipam/config.php
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    remote_src: yes
+
+- name: Disable Installer
+  ansible.builtin.lineinfile:
+    path: /var/www/phpipam/config.php
+    regexp: '^\$disable_installer\s*=\s*false;'
+    line: "$disable_installer = true;"
+
+# Import of sql script with encoding option
+- name: Importamos el esquema de la DB
+  community.mysql.mysql_db:
+    state: import
+    login_user: '{{ db_user }}'
+    login_password: '{{ db_pass }}'
+    login_host: localhost
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: "{{ db_name }}"
+    encoding: utf8mb4
+    target: /var/www/phpipam/db/SCHEMA.sql
+
+
+
+- name: Agregamos VirtualHost
+  template:
+    src=apache.conf.j2
+    dest="/etc/apache2/sites-available/{{ http_site_conf }}"
+    owner=root
+    mode=0644
+
+
+- name: Enable new site
+  ansible.builtin.shell:
+    cmd: "/usr/sbin/a2ensite {{ http_site_conf }}"
+
+- name: Enable module Rewrite
+  ansible.builtin.shell:
+    cmd: "/usr/sbin/a2enmod rewrite"
+
+- name: Deshabilitamos el sitio default
+  ansible.builtin.shell:
+    cmd: "/usr/sbin/a2dissite 000-default.conf"
+
+  notify:
+    - restart apache2

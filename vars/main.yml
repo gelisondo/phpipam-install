@@ -1,0 +1,45 @@
+---
+# vars file for phpipam-install
+
+apache2:
+  packages:
+    debian:
+      bullseye_bookworm:
+        - apache2
+        - apache2-utils
+        - python3-certbot-apache
+        - certbot
+
+php:
+  packages:
+    php82:
+      - php8.2
+      - php8.2-cli
+      - php8.2-common
+      - php8.2-gmp
+      - php8.2-ldap
+      - php8.2-mcrypt
+      - php8.2-xml
+      - php8.2-mbstring
+      - php8.2-mysql
+      - php8.2-gd
+      - php-pear
+      - php8.2-curl
+
+
+# Vars file for MySql(server, client)
+mysql:
+  packages:
+    - mariadb-server
+    - mariadb-client
+    - python3-pymysql
+
+
+systemconfig:
+  packages:
+    - unzip
+    - p7zip-full
+    - unrar-free
+    - git
+    - curl
+    - fping

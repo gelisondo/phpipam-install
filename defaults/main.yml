@@ -1,0 +1,16 @@
+---
+# defaults file for phpipam-install
+
+GIT_VERSION: "master"
+
+db_user: "phpipam"
+db_pass: "phpipamadmin"
+db_name: "phpipam"
+
+app_user: "www_data"
+
+http_port: 80
+http_site_conf: "phpipam.conf"
+server_admin: "test@dominio.com"
+http_fqdn: phpipam-c.enba.edu.uy
+http_root_site: phpipam
